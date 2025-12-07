@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>LFP Calculator</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tesla LFP">
+    <meta name="theme-color" content="#000000">
+
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='background-color:%23111'><text y='.9em' font-size='90'>🔋</text></svg>">
+
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
+            --text-main: #ffffff;
+            --text-secondary: #8e8e93;
+            --accent: #30d158;
+            --accent-dim: #208e3b;
+            --danger: #ff453a;
+            --input-bg: #2c2c2e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            /* Kluczowe dla iPhone 15 - obsługa Dynamic Island i Home Indicator */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+       .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+       .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Stylowanie inputów w stylu iOS */
+        input {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: none;
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            font-size: 18px;
+            box-sizing: border-box;
+            -webkit-appearance: none; /* Usuwa domyślne style iOS */
+        }
+
+        input:focus {
+            outline: 2px solid var(--accent);
+            background-color: #3a3a3c;
+        }
+
+        /* Przycisk w stylu iOS */
+        button {
+            width: 100%;
+            padding: 18px;
+            background-color: var(--accent);
+            color: black;
+            border: none;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            margin-top: 10px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.8;
+        }
+
+       .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 16px;
+            background-color: #2c2c2e; /* Nieco jaśniejszy niż tło */
+            display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+       .result h3 { margin-top: 0; font-size: 20px; }
+       .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #3a3a3c; padding-bottom: 10px; }
+       .stat-row:last-child { border-bottom: none; }
+       .stat-val { font-weight: bold; font-variant-numeric: tabular-nums; }
+       .highlight { color: var(--accent); }
+       .warn { color: var(--danger); }
+
+       .timeline { margin-top: 20px; }
+       .timeline-item { 
+            position: relative; 
+            padding-left: 20px; 
+            padding-bottom: 20px; 
+            border-left: 2px solid #444; 
+        }
+       .timeline-item:last-child { border-left: 2px solid transparent; }
+       .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--accent);
+        }
+       .time-label { color: var(--text-secondary); font-size: 13px; font-weight: 600; }
+       .action-label { font-size: 16px; margin-top: 4px; font-weight: 500; }
+       .sub-label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Specjalny kolor kropki dla zmiany kabla */
+       .dot-switch::before { background-color: var(--danger); box-shadow: 0 0 10px rgba(255, 69, 58, 0.4); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔋 LFP Hybrid Calc</h1>
+
+        <div class="card">
+            <label>Stan baterii przy przyjeździe (%)</label>
+            <input type="number" id="currentSoc" placeholder="np. 45" inputmode="numeric" pattern="[0-9]*">
+
+            <label>Godzina przyjazdu</label>
+            <input type="time" id="arrivalTime" value="08:00">
+
+            <label>Godzina wyjazdu</label>
+            <input type="time" id="departureTime" value="16:00">
+
+            <button onclick="calculate()">Oblicz Plan</button>
+        </div>
+
+        <div id="output" class="result">
+            <h3>Twój Plan:</h3>
+            <div class="stat-row">
+                <span>Energia potrzebna:</span>
+                <span class="stat-val"><span id="energyNeeded">0</span> kWh</span>
+            </div>
+            <div class="stat-row">
+                <span>Limit 11kW zużyty:</span>
+                <span class="stat-val warn"><span id="limitUsed">0</span> kWh</span>
+            </div>
+            
+            <div class="timeline" id="timeline"></div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Parametry
+            const BATTERY_SIZE = 60.5; // kWh
+            const CHARGER_SLOW = 2.5;  // kW
+            const CHARGER_FAST = 11.0; // kW
+            const TARGET_SOC = 100;
+
+            let startSoc = parseFloat(document.getElementById('currentSoc').value);
+            let arrTimeVal = document.getElementById('arrivalTime').value;
+            let depTimeVal = document.getElementById('departureTime').value;
+
+            if (isNaN(startSoc)) { alert("Wpisz % baterii!"); return; }
+
+            // Obliczanie czasu
+            let today = new Date().toISOString().split('T');
+            let arr = new Date(today + "T" + arrTimeVal);
+            let dep = new Date(today + "T" + depTimeVal);
+            
+            // Obsługa nocnej zmiany (wyjazd następnego dnia)
+            if (dep <= arr) { dep.setDate(dep.getDate() + 1); }
+
+            let hoursAvailable = (dep - arr) / 1000 / 60 / 60;
+            let kwhNeeded = (TARGET_SOC - startSoc) / 100 * BATTERY_SIZE;
+            let maxSlowKwh = hoursAvailable * CHARGER_SLOW;
+
+            let timeFast = 0;
+            let timeSlow = 0;
+            let strategy = "";
+
+            if (kwhNeeded <= 0) {
+                alert("Bateria już pełna!"); return;
+            }
+
+            if (kwhNeeded <= maxSlowKwh) {
+                timeSlow = kwhNeeded / CHARGER_SLOW;
+                timeFast = 0;
+                strategy = "slow_only";
+            } else {
+                timeFast = (kwhNeeded - (CHARGER_SLOW * hoursAvailable)) / (CHARGER_FAST - CHARGER_SLOW);
+                // Zabezpieczenie przed ujemnym czasem (matematyka vs realia)
+                if (timeFast < 0) timeFast = 0; 
+                timeSlow = hoursAvailable - timeFast;
+                strategy = "hybrid";
+            }
+
+            // Generowanie HTML
+            let switchTime = new Date(arr.getTime() + timeFast * 60 * 60 * 1000);
+            
+            // Formatowanie godziny
+            function fmt(date) { 
+                return date.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'}); 
+            }
+
+            let html = "";
+            let limitUsed = 0;
+
+            if (strategy === "slow_only") {
+                // Obliczamy najpóźniejszy start, żeby skończyć równo z wyjazdem (LFP lubi być ciepłe przy wyjeździe)
+                // Czas ładowania w ms
+                let chargeDurationMs = timeSlow * 60 * 60 * 1000;
+                let optimalStart = new Date(dep.getTime() - chargeDurationMs);
+
+                // Jeśli optimalStart jest wcześniej niż przyjazd (niemożliwe w tym bloku if, ale dla pewności)
+                if (optimalStart < arr) optimalStart = arr;
+
+                html += `<div class="timeline-item">
+                            <div class="time-label">${fmt(arr)}</div>
+                            <div class="action-label">Przyjazd</div>
+                            <div class="sub-label">Czekaj lub podłącz od razu</div>
+                         </div>`;
+                
+                html += `<div class="timeline-item">
+                            <div class="time-label">${fmt(optimalStart)}</div>
+                            <div class="action-label" style="color: #30d158">Start 2.5 kW</div>
+                            <div class="sub-label">Podłącz darmowe ładowanie</div>
+                         </div>`;
+
+                html += `<div class="timeline-item" style="border-left-color: transparent;">
+                            <div class="time-label">${fmt(dep)}</div>
+                            <div class="action-label">Wyjazd (100%)</div>
+                         </div>`;
+            } else {
+                limitUsed = timeFast * CHARGER_FAST;
+                html += `<div class="timeline-item dot-switch">
+                            <div class="time-label">${fmt(arr)}</div>
+                            <div class="action-label" style="color: #ff453a">Start 11 kW</div>
+                            <div class="sub-label">Szybkie ładowanie (Priorytet)</div>
+                         </div>`;
+                
+                html += `<div class="timeline-item dot-switch">
+                            <div class="time-label" style="font-size: 1.1em; color: white;">${fmt(switchTime)}</div>
+                            <div class="action-label" style="color: #ffd60a; font-weight: bold;">PRZEPNIJ KABEL!</div>
+                            <div class="sub-label">Zmień na darmowe 2.5 kW</div>
+                         </div>`;
+
+                html += `<div class="timeline-item" style="border-left-color: transparent;">
+                            <div class="time-label">${fmt(dep)}</div>
+                            <div class="action-label">Wyjazd (100%)</div>
+                            <div class="sub-label">Koniec balansowania</div>
+                         </div>`;
+            }
+
+            document.getElementById('energyNeeded').innerText = kwhNeeded.toFixed(1);
+            document.getElementById('limitUsed').innerText = limitUsed.toFixed(1);
+            document.getElementById('timeline').innerHTML = html;
+            document.getElementById('output').style.display = 'block';
+            
+            // Scroll do wyniku
+            document.getElementById('output').scrollIntoView({behavior: "smooth"});
+        }
+    </script>
+
+</body>
+</html>
