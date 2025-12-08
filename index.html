@@ -2,419 +2,521 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>Tesla LFP Plan</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Tesla LFP">
     <meta name="theme-color" content="#000000">
-
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%231c1c1e'/%3E%3Cpath d='M90 30L60 90H90L80 150L120 70H90L100 30Z' fill='%2330d158' stroke='%2330d158' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/tesla-model-3.png">
+    
+    <title>Tesla LFP Manager</title>
 
     <style>
         :root {
-            --bg-color: #000000;
+            --bg: #000000;
             --card-bg: #1c1c1e;
-            --text-main: #ffffff;
+            --text: #ffffff;
             --text-secondary: #8e8e93;
-            --accent: #30d158;
-            --accent-dim: #1b5e20;
-            --danger: #ff453a;
+            --accent: #30d158; /* Apple Green */
+            --danger: #ff453a; /* Apple Red */
+            --warning: #ffd60a;
             --input-bg: #2c2c2e;
-            --timeline-line: #3a3a3c;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 0;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
+            overflow: hidden; /* App-like feel */
         }
 
-       .container {
-            padding: 20px;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            box-sizing: border-box;
+        /* Kontener główny z uwzględnieniem Notcha/Dynamic Island */
+       .app-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-top: calc(var(--safe-top) + 20px);
+            padding-bottom: calc(var(--safe-bottom) + 80px); /* Miejsce na menu */
+            padding-left: 20px;
+            padding-right: 20px;
+            -webkit-overflow-scrolling: touch;
         }
 
         h1 {
-            text-align: center;
-            font-size: 20px;
-            margin-top: 10px;
+            font-size: 28px;
+            font-weight: 700;
             margin-bottom: 20px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
         }
 
+        /* Karty w stylu iOS */
        .card {
             background-color: var(--card-bg);
-            padding: 24px;
-            border-radius: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-       .input-group {
+            border-radius: 16px;
+            padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--text-secondary);
+       .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+       .card-title {
+            font-size: 17px;
             font-weight: 600;
+            color: var(--text-secondary);
             text-transform: uppercase;
         }
 
-        input[type="number"], input[type="time"] {
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            background-color: var(--input-bg);
-            color: var(--text-main);
-            font-size: 22px;
+        /* Inputy */
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
             font-weight: 500;
-            box-sizing: border-box;
-            transition: all 0.2s;
-            text-align: center;
+        }
+
+       .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-size: 17px;
             -webkit-appearance: none;
         }
 
         input:focus {
-            outline: none;
-            background-color: #3a3a3c;
-            border-color: var(--accent);
+            outline: 2px solid var(--accent);
         }
 
+        /* Buttony */
         button {
             width: 100%;
-            padding: 18px;
-            background-color: var(--accent);
-            color: #000;
-            border: none;
-            border-radius: 14px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(48, 209, 88, 0.3);
-            transition: transform 0.1s, opacity 0.2s;
-        }
-
-        button:active {
-            transform: scale(0.96);
-            opacity: 0.9;
-        }
-
-       .result {
-            margin-top: 10px;
-            padding: 24px;
-            border-radius: 20px;
-            background-color: #151516;
-            border: 1px solid #333;
-            display: none;
-            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-       .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-       .stat-box {
-            background-color: var(--input-bg);
-            padding: 12px;
+            padding: 16px;
             border-radius: 12px;
-            text-align: center;
+            border: none;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
         }
 
-       .stat-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
+       .btn-primary { background-color: var(--accent); color: black; }
+       .btn-danger { background-color: var(--danger); color: white; margin-top: 10px; }
+       .btn-secondary { background-color: var(--input-bg); color: var(--accent); margin-top: 10px;}
+        
+        button:active { opacity: 0.7; }
 
-       .stat-value {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-       .timeline {
+        /* Pasek Postępu */
+       .progress-container {
+            height: 24px;
+            background-color: var(--input-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
             position: relative;
-            padding-left: 30px;
-            margin-top: 10px;
         }
 
-       .timeline::before {
-            content: '';
+       .progress-bar {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+        }
+
+       .progress-text {
             position: absolute;
-            left: 7px;
-            top: 10px;
-            bottom: 10px;
-            width: 2px;
-            background: var(--timeline-line);
-            border-radius: 2px;
+            width: 100%;
+            text-align: center;
+            top: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 1px 2px black;
         }
 
+        /* Timeline */
        .timeline-item {
             position: relative;
-            margin-bottom: 35px;
+            padding-left: 25px;
+            margin-bottom: 20px;
+            border-left: 2px solid #333;
         }
-
-       .timeline-item:last-child {
-            margin-bottom: 0;
-        }
-
        .timeline-dot {
             position: absolute;
-            left: -30px;
-            top: 5px;
-            width: 16px;
-            height: 16px;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background-color: var(--timeline-line);
-            border: 3px solid var(--card-bg);
-            z-index: 2;
+        }
+       .dot-red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+       .dot-green { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+       .dot-yellow { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+
+        /* Dolne Menu Nawigacyjne */
+       .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding-bottom: var(--safe-bottom);
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-around;
+            padding-top: 10px;
+            z-index: 1000;
         }
 
-       .time-display {
-            font-family: monospace;
+       .tab-btn {
+            background: none;
             color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50%;
         }
 
-       .action-title {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 4px;
+       .tab-btn.active { color: var(--accent); }
+       .tab-icon { font-size: 24px; margin-bottom: 4px; }
+
+        /* Widoki */
+       .view { display: none; }
+       .view.active { display: block; }
+
+        /* Modal do edycji */
+       .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+       .modal.open { display: flex; }
+       .modal-content {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 350px;
         }
 
-       .action-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        /* Kolory statusów */
-       .dot-red { background-color: var(--danger); box-shadow: 0 0 10px rgba(255, 69, 58, 0.4); }
-       .dot-yellow { background-color: #ffd60a; box-shadow: 0 0 10px rgba(255, 214, 10, 0.4); }
-       .dot-green { background-color: var(--accent); box-shadow: 0 0 10px rgba(48, 209, 88, 0.4); }
-
-       .saved-badge {
-            display: inline-block;
-            background-color: rgba(48, 209, 88, 0.15);
-            color: var(--accent);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>⚡ Tesla LFP Strateg</h1>
-
-        <div class="card">
-            <div class="input-group">
-                <label>Stan baterii (%)</label>
-                <input type="number" id="currentSoc" placeholder="50" inputmode="numeric" pattern="[0-9]*">
+    <div class="app-container">
+        
+        <div id="view-calc" class="view active">
+            <h1>🔋 Plan Ładowania</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Dane wejściowe</span>
+                </div>
+                <div class="input-row">
+                    <div style="flex:1">
+                        <label>Start %</label>
+                        <input type="number" id="startSoc" value="40" inputmode="numeric">
+                    </div>
+                    <div style="flex:1">
+                        <label>Cel %</label>
+                        <input type="number" id="targetSoc" value="100" readonly style="color:var(--text-secondary)">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div style="flex:1">
+                        <label>Start pracy</label>
+                        <input type="time" id="startTime" value="08:00">
+                    </div>
+                    <div style="flex:1">
+                        <label>Koniec pracy</label>
+                        <input type="time" id="endTime" value="16:00">
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="calculatePlan()">Oblicz Strategię</button>
             </div>
 
-            <div class="input-group">
-                <label>Przyjazd do pracy</label>
-                <input type="time" id="arrivalTime" value="08:00">
+            <div id="plan-result" class="card" style="display:none">
+                <div class="card-header">
+                    <span class="card-title">Twój Harmonogram</span>
+                </div>
+                <div id="timeline-content"></div>
+                <button class="btn-secondary" onclick="logSession()">💾 Zapisz zużycie do historii</button>
             </div>
-
-            <div class="input-group">
-                <label>Wyjazd do domu</label>
-                <input type="time" id="departureTime" value="16:00">
-            </div>
-
-            <button onclick="calculate()">Oblicz Optymalny Plan</button>
         </div>
 
-        <div id="output" class="result">
-            <div class="stat-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Potrzebna Energia</div>
-                    <div class="stat-value" id="energyNeeded">0 kWh</div>
+        <div id="view-stats" class="view">
+            <h1>📊 Koszty i Limit</h1>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Limit Płatny (11kW)</span>
+                    <button style="width:auto; padding:5px 10px; font-size:12px; background:#333" onclick="openEditModal()">✏️ Edytuj</button>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-label">Zużycie limitu 11kW</div>
-                    <div class="stat-value" id="limitUsed" style="color: var(--danger)">0 kWh</div>
+                
+                <h2 style="margin:0; font-size:42px; text-align:center">
+                    <span id="current-usage">0</span> <span style="font-size:20px; color:var(--text-secondary)">/ 100 kWh</span>
+                </h2>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="monthly-progress"></div>
+                    <div class="progress-text" id="progress-text">0%</div>
                 </div>
-                <div class="stat-box" style="grid-column: span 2; background-color: rgba(48, 209, 88, 0.1);">
-                    <div class="stat-label">Zaoszczędzony limit</div>
-                    <div class="stat-value" id="limitSaved" style="color: var(--accent)">0 kWh</div>
+                
+                <p style="text-align:center; color:var(--text-secondary); font-size:13px; margin-top:10px">
+                    Miesiąc: <span id="current-month-name">...</span>
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Historia Operacji</span>
+                    <button style="width:auto; padding:5px 10px; font-size:12px; background:#333" onclick="clearHistory()">🗑️ Wyczyść</button>
+                </div>
+                <div id="history-list" style="font-size:13px; color:var(--text-secondary); max-height: 200px; overflow-y:auto">
+                    Brak wpisów.
                 </div>
             </div>
-            
-            <div class="timeline" id="timeline"></div>
+        </div>
+
+    </div>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('calc', this)">
+            <span class="tab-icon">⚡</span>
+            <span>Kalkulator</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('stats', this)">
+            <span class="tab-icon">📅</span>
+            <span>Limit Miesięczny</span>
+        </button>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h3>Korekta Licznika</h3>
+            <label>Aktualne zużycie (kWh)</label>
+            <input type="number" id="manual-usage" inputmode="decimal">
+            <div style="display:flex; gap:10px; margin-top:20px">
+                <button class="btn-secondary" onclick="closeEditModal()">Anuluj</button>
+                <button class="btn-primary" onclick="saveManualUsage()">Zapisz</button>
+            </div>
         </div>
     </div>
 
     <script>
-        function calculate() {
-            // Parametry
-            const BATTERY_SIZE = 60.5;
-            const CHARGER_SLOW = 2.5;
-            const CHARGER_FAST = 11.0;
-            
-            // Pobieranie danych
-            let startSoc = parseFloat(document.getElementById('currentSoc').value);
-            let arrTimeVal = document.getElementById('arrivalTime').value;
-            let depTimeVal = document.getElementById('departureTime').value;
+        // --- KONFIGURACJA ---
+        const BATTERY_SIZE = 60.5; // LFP RWD
+        const CHARGER_SLOW = 2.5;
+        const CHARGER_FAST = 11.0;
+        const MONTHLY_LIMIT = 100;
 
-            if (isNaN(startSoc)) { alert("Podaj % baterii!"); return; }
-            if (!arrTimeVal ||!depTimeVal) { alert("Ustaw godziny!"); return; }
+        // --- ZARZĄDZANIE STANEM (LOCALSTORAGE + DATA) ---
+        const state = {
+            usage: 0,
+            month: "",
+            history:
+        };
 
-            // NAPRAWA BŁĘDU DATY DLA IPHONE
-            // Zamiast toISOString(), tworzymy datę ręcznie dla dzisiaj
-            let now = new Date();
-            let year = now.getFullYear();
-            let month = String(now.getMonth() + 1).padStart(2, '0');
-            let day = String(now.getDate()).padStart(2, '0');
-            let todayString = `${year}-${month}-${day}`; // Format YYYY-MM-DD
+        function initApp() {
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${now.getMonth()}`; // np. "2024-5"
 
-            // Tworzenie obiektów daty przez łączenie stringów (najbezpieczniejsze dla Safari)
-            // Dodajemy ":00", żeby Safari na pewno dobrze zinterpretowało czas
-            let arr = new Date(`${todayString}T${arrTimeVal}:00`);
-            let dep = new Date(`${todayString}T${depTimeVal}:00`);
+            // 1. Pobierz dane
+            const storedData = JSON.parse(localStorage.getItem('teslaLfpData'));
 
-            // Obsługa "nocnej zmiany" (jeśli wyjazd jest wcześniej niż przyjazd, to znaczy że to następny dzień)
-            if (dep <= arr) {
-                dep.setDate(dep.getDate() + 1);
-            }
-
-            let hoursAvailable = (dep - arr) / 1000 / 60 / 60; // czas w godzinach
-            let kwhNeeded = (100 - startSoc) / 100 * BATTERY_SIZE; // ile brakuje do 100%
-            let maxSlowKwh = hoursAvailable * CHARGER_SLOW; // ile max da rada wbić na wolnym
-
-            let timeFast = 0;
-            let timeSlow = 0;
-            let strategy = "";
-
-            if (kwhNeeded <= 0) {
-                alert("Bateria jest już pełna!"); return;
-            }
-
-            // Algorytm wyboru strategii
-            if (kwhNeeded <= maxSlowKwh) {
-                // Wystarczy wolna ładowarka
-                timeSlow = kwhNeeded / CHARGER_SLOW;
-                timeFast = 0;
-                strategy = "slow_only";
+            if (storedData) {
+                // 2. Sprawdź czy miesiąc się zmienił
+                if (storedData.month!== currentMonthKey) {
+                    alert(`Nowy miesiąc! Poprzednie zużycie: ${storedData.usage.toFixed(1)} kWh. Licznik zresetowany.`);
+                    state.usage = 0;
+                    state.history =; // Opcjonalnie: można archiwizować
+                    state.month = currentMonthKey;
+                } else {
+                    state.usage = storedData.usage;
+                    state.history = storedData.history ||;
+                    state.month = storedData.month;
+                }
             } else {
-                // Potrzebna hybryda
-                timeFast = (kwhNeeded - (CHARGER_SLOW * hoursAvailable)) / (CHARGER_FAST - CHARGER_SLOW);
-                if (timeFast < 0) timeFast = 0;
-                timeSlow = hoursAvailable - timeFast;
-                strategy = "hybrid";
+                state.month = currentMonthKey;
             }
 
-            // Obliczenia statystyk
-            let limitUsed = timeFast * CHARGER_FAST;
+            saveState();
+            updateUI();
             
-            // Ile byś zużył, gdybyś ładował TYLKO na 11kW do pełna?
-            let limitIfAllFast = kwhNeeded; 
-            // Oszczędność = ile byś zużył normalnie - ile zużyjesz teraz
-            let saved = limitIfAllFast - limitUsed;
-            if (saved < 0) saved = 0; // Zabezpieczenie
+            // Ustaw nazwę miesiąca
+            const months =;
+            document.getElementById('current-month-name').innerText = months[now.getMonth()];
+        }
 
-            // Generowanie HTML
-            let switchTime = new Date(arr.getTime() + timeFast * 60 * 60 * 1000);
+        function saveState() {
+            localStorage.setItem('teslaLfpData', JSON.stringify(state));
+            updateUI();
+        }
+
+        // --- KALKULATOR (LOGIKA Z RAPORTU) ---
+        let last calculatedLimitUsage = 0;
+
+        function calculatePlan() {
+            const startSoc = parseFloat(document.getElementById('startSoc').value);
+            const startTimeVal = document.getElementById('startTime').value;
+            const endTimeVal = document.getElementById('endTime').value;
+
+            // Parsowanie czasu
+            const d = new Date();
+            const start = new Date(d.toDateString() + ' ' + startTimeVal);
+            const end = new Date(d.toDateString() + ' ' + endTimeVal);
             
-            function fmt(date) { 
-                return date.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'}); 
-            }
+            let durationHours = (end - start) / 1000 / 60 / 60;
+            if (durationHours < 0) durationHours += 24; // Nocna zmiana
+
+            const kwhNeeded = (100 - startSoc) / 100 * BATTERY_SIZE;
+            const maxSlowCharge = durationHours * CHARGER_SLOW;
 
             let html = "";
+            let fastHours = 0;
 
-            if (strategy === "slow_only") {
-                // Obliczamy start tak, aby skończyć równo z wyjazdem (najzdrowiej)
-                let chargeDurationMs = timeSlow * 60 * 60 * 1000;
-                let optimalStart = new Date(dep.getTime() - chargeDurationMs);
-                if (optimalStart < arr) optimalStart = arr;
+            if (kwhNeeded <= maxSlowCharge) {
+                // Wystarczy wolne
+                const neededHours = kwhNeeded / CHARGER_SLOW;
+                const idleTime = durationHours - neededHours;
+                const optimalStart = new Date(end.getTime() - (neededHours * 3600000));
+                
+                calculatedLimitUsage = 0;
 
-                html += `
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-yellow"></div>
-                    <div class="time-display">${fmt(arr)}</div>
-                    <div class="action-title">Przyjazd</div>
-                    <div class="action-desc">Podłącz pod 2.5 kW, ale ładowanie może zacząć się później.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-green"></div>
-                    <div class="time-display">${fmt(optimalStart)}</div>
-                    <div class="action-title" style="color: var(--accent)">Start 2.5 kW</div>
-                    <div class="action-desc">Auto startuje ładowanie (możesz ustawić w apce).</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-green"></div>
-                    <div class="time-display">${fmt(dep)}</div>
-                    <div class="action-title">Koniec (100%)</div>
-                    <div class="action-desc">Idealne balansowanie zakończone przed wyjazdem.</div>
-                </div>`;
+                html += `<div class="timeline-item"><div class="timeline-dot dot-yellow"></div>
+                        <strong>${formatTime(start)} - Przyjazd</strong><br>Podłącz 2.5 kW. Auto czeka.</div>`;
+                
+                html += `<div class="timeline-item"><div class="timeline-dot dot-green"></div>
+                        <strong>${formatTime(optimalStart)} - Start Ładowania</strong><br>Auto samo ruszy (Scheduled Charging).</div>`;
             } else {
-                html += `
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-red"></div>
-                    <div class="time-display">${fmt(arr)}</div>
-                    <div class="action-title" style="color: var(--danger)">Start 11 kW</div>
-                    <div class="action-desc">Podłącz pod szybką ładowarkę. Szybki zysk energii.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-yellow"></div>
-                    <div class="time-display" style="font-size: 1.2em; color: #fff; font-weight: bold;">${fmt(switchTime)}</div>
-                    <div class="action-title" style="color: #ffd60a">PRZEPNIJ KABEL! ⚠️</div>
-                    <div class="action-desc">Zmień na darmowe 2.5 kW. Masz teraz ok. ${Math.round(startSoc + (limitUsed/BATTERY_SIZE)*100)}% baterii.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot dot-green"></div>
-                    <div class="time-display">${fmt(dep)}</div>
-                    <div class="action-title">Koniec (100%)</div>
-                    <div class="action-desc">Bateria pełna, zbalansowana i ciepła. Szerokiej drogi!</div>
-                </div>`;
+                // Hybryda
+                // Równanie: (11 * t_fast) + (2.5 * (total - t_fast)) = needed
+                // 11t + 2.5total - 2.5t = needed
+                // 8.5t = needed - 2.5total
+                fastHours = (kwhNeeded - (CHARGER_SLOW * durationHours)) / (CHARGER_FAST - CHARGER_SLOW);
+                if (fastHours < 0) fastHours = 0; // Zabezpieczenie
+
+                const switchTime = new Date(start.getTime() + (fastHours * 3600000));
+                calculatedLimitUsage = fastHours * CHARGER_FAST;
+
+                html += `<div class="timeline-item"><div class="timeline-dot dot-red"></div>
+                        <strong>${formatTime(start)} - Szybki Start (11 kW)</strong><br>
+                        Pobierzesz: ${calculatedLimitUsage.toFixed(1)} kWh z limitu.</div>`;
+                
+                html += `<div class="timeline-item"><div class="timeline-dot dot-yellow"></div>
+                        <strong>${formatTime(switchTime)} - PRZEŁĄCZ KABEL!</strong><br>
+                        Zmień na darmowe 2.5 kW.</div>`;
             }
 
-            // Wypełnianie danych
-            document.getElementById('energyNeeded').innerText = kwhNeeded.toFixed(1) + " kWh";
-            document.getElementById('limitUsed').innerText = limitUsed.toFixed(1) + " kWh";
-            document.getElementById('limitSaved').innerText = saved.toFixed(1) + " kWh"; // Nowy licznik
-            
-            document.getElementById('timeline').innerHTML = html;
-            
-            let output = document.getElementById('output');
-            output.style.display = 'block';
-            output.scrollIntoView({behavior: "smooth"});
-        }
-    </script>
+            html += `<div class="timeline-item"><div class="timeline-dot dot-green"></div>
+                    <strong>${formatTime(end)} - Wyjazd (100%)</strong><br>
+                    Bateria zbalansowana i ciepła.</div>`;
 
+            document.getElementById('timeline-content').innerHTML = html;
+            document.getElementById('plan-result').style.display = 'block';
+        }
+
+        function logSession() {
+            if (calculatedLimitUsage > 0) {
+                state.usage += calculatedLimitUsage;
+                state.history.unshift(`${new Date().toLocaleDateString()} - Dodano ${calculatedLimitUsage.toFixed(1)} kWh (Kalkulator)`);
+                saveState();
+                alert(`Dodano ${calculatedLimitUsage.toFixed(1)} kWh do limitu miesięcznego.`);
+            } else {
+                alert("To ładowanie było darmowe (0 kWh z limitu)!");
+            }
+        }
+
+        // --- UI & NAWIGACJA ---
+        function updateUI() {
+            // Licznik
+            const el = document.getElementById('current-usage');
+            el.innerText = state.usage.toFixed(1);
+            
+            // Pasek Postępu
+            const pct = Math.min((state.usage / MONTHLY_LIMIT) * 100, 100);
+            const bar = document.getElementById('monthly-progress');
+            bar.style.width = pct + "%";
+            document.getElementById('progress-text').innerText = Math.round(pct) + "%";
+
+            // Kolory paska (Logika z raportu)
+            if (pct < 50) bar.style.backgroundColor = "var(--accent)"; // Zielony
+            else if (pct < 85) bar.style.backgroundColor = "var(--warning)"; // Żółty
+            else bar.style.backgroundColor = "var(--danger)"; // Czerwony
+
+            // Historia
+            const list = document.getElementById('history-list');
+            list.innerHTML = state.history.length? state.history.map(h => `<div>${h}</div>`).join('') : "Brak wpisów.";
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById('view-' + tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // --- OBSŁUGA MODALA EDYCJI ---
+        function openEditModal() {
+            document.getElementById('manual-usage').value = state.usage;
+            document.getElementById('edit-modal').classList.add('open');
+        }
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('open');
+        }
+        function saveManualUsage() {
+            const val = parseFloat(document.getElementById('manual-usage').value);
+            if (!isNaN(val)) {
+                const diff = val - state.usage;
+                state.usage = val;
+                state.history.unshift(`${new Date().toLocaleDateString()} - Korekta ręczna (${diff > 0? '+' : ''}${diff.toFixed(1)})`);
+                saveState();
+                closeEditModal();
+            }
+        }
+        function clearHistory() {
+            if(confirm("Czy na pewno chcesz wyzerować miesiąc?")) {
+                state.usage = 0;
+                state.history =;
+                saveState();
+            }
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        // Start
+        window.onload = initApp;
+
+    </script>
 </body>
 </html>
